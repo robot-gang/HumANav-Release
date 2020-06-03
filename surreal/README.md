@@ -73,19 +73,18 @@ sudo apt-get install libglu1
 
 # Install scipy
 For this step, we want to install scipy. However, installing scipy installs a new version of numpy that causes a conflict. To fix this issue we need to uninstall the default version of numpy that comes with Blender.
-
+```
 # Uninstall numpy
-```
+
 $BLENDER_PATH/2.79/python/bin/python3.5m -m pip uninstall numpy
-```
 
 # Manually delete blender's default numpy installation
-```
+
 rm -rf $BLENDER_PATH/2.79/python/lib/python3.5/site-packages/numpy/
-```
+
 
 # Install scipy (numpy will also be reinstalled in the process)
-```
+
 $BLENDER_PATH/2.79/python/bin/python3.5m -m pip install scipy
 ```
 
