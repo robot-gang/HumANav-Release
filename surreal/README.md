@@ -16,6 +16,7 @@ Once you receive the credentials to download the dataset, you will have a person
 a) With the same credentials as with the SURREAL dataset, you can download the necessary SMPL data and place it in `/PATH/TO/HumANav/surreal/download/SURREAL/smpl_data`.
 
 ``` 
+chmod +x download_smpl_data.sh
 ./download_smpl_data.sh /PATH/TO/HumANav/surreal/download yourusername yourpassword
 ```
 
@@ -41,56 +42,46 @@ The folder `/PATH/TO/HumANav/surreal/download/SURREAL/smpl_data` should contain 
 
 
 #### 2.1.2. Blender
-You need to download [Blender](http://download.blender.org/release/) and install scipy package to run the first part of the code. The provided code was tested with [Blender2.78](http://download.blender.org/release/Blender2.78/blender-2.78a-linux-glibc211-x86_64.tar.bz2), which is shipped with its own python executable as well as distutils package. Therefore, it is sufficient to do the following:
+You need to download [Blender](http://download.blender.org/release/) and install scipy package to run the first part of the code. The provided code was tested with Blender 2.79, which is shipped with its own python executable as well as distutils package. Therefore, it is sufficient to do the following:
 
 ``` 
 # Install blender 2.78
-wget http://download.blender.org/release/Blender2.78/blender-2.78a-linux-glibc211-x86_64.tar.bz2
+wget https://download.blender.org/release/Blender2.79/blender-2.79a-linux-glibc219-x86_64.tar.bz2
 
 # Un-TAR Blender
-tar xjf blender-2.78a-linux-glibc211-x86_64.tar.bz2 
+tar xjf blender-2.79a-linux-glibc219-x86_64.tar.bz2
 
 # Export the BLENDER_PATH
-export BLENDER_PATH='/path/to/blender/blender-2.78-linux-glibc219-x86_64'
+export BLENDER_PATH='/path/to/blender/blender-2.79a-linux-glibc219-x86_64'
 
 # Install pip
 wget https://bootstrap.pypa.io/get-pip.py
-$BLENDER_PATH/2.78/python/bin/python3.5m get-pip.py
+$BLENDER_PATH/2.79/python/bin/python3.5m get-pip.py
 
 # Make sure you have libglu1
 sudo apt-get install libglu1
 
+
 # Install scipy
-$BLENDER_PATH/2.78/python/bin/python3.5m -m pip install scipy
+For this step, we want to install scipy. However, installing scipy installs a new version of numpy that causes a conflict. To fix this issue we need to uninstall the default version of numpy that comes with Blender.
 ```
-
-Note: Installation of pip may fail in Blender 2.78a (this is a known issue)
-If this happens Blender 2.79a should work. You can install it from here (and then repeat the above steps substituting 2.79a for 2.78).
-```
-wget https://download.blender.org/release/Blender2.79/blender-2.79a-linux-glibc219-x86_64.tar.bz2
-```
-
-##### Check the scipy installation
-```
-$BLENDER_PATH/blender -b -t 1 -P check_numpy.py
-```
-If scipy & numpy are installed correctly the the script should print "Success". You may see an error similar to:
-```
-ImportError: Something is wrong with the numpy installation. While importing we detected an older version of numpy
-```
-To fix this run the following
-```
-# Uninstall numpy & scipy
-$BLENDER_PATH/2.78/python/bin/python3.5m -m pip uninstall scipy
-$BLENDER_PATH/2.78/python/bin/python3.5m -m pip uninstall numpy
+# Uninstall numpy
+$BLENDER_PATH/2.79/python/bin/python3.5m -m pip uninstall numpy
 
 # Manually delete blender's default numpy installation
-rm -rf $BLENDER_PATH/2.78/python/lib/python3.5/site-packages/numpy/
+rm -rf $BLENDER_PATH/2.79/python/lib/python3.5/site-packages/numpy/
 
-# Reinstall scipy (numpy will also be reinstalled in the process)
-$BLENDER_PATH/2.78/python/bin/python3.5m -m pip install scipy
+# Install scipy (numpy will also be reinstalled in the process)
+$BLENDER_PATH/2.79/python/bin/python3.5m -m pip install scipy
 
+##### Check the scipy installation
+cd `/PATH/TO/HumANav/surreal/download/`
+$BLENDER_PATH/blender -b -t 1 -P check_numpy.py
 ```
+If scipy & numpy are installed correctly the the script should print "Success".
+
+
+
 
 
 ## 3. Custom Instructions for HumANav Data Generation
