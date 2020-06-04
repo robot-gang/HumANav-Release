@@ -45,33 +45,33 @@ The folder `/PATH/TO/HumANav/surreal/download/SURREAL/smpl_data` should contain 
 You need to download [Blender](http://download.blender.org/release/) and install scipy package to run the first part of the code. The provided code was tested with Blender 2.79, which is shipped with its own python executable as well as distutils package. Therefore, it is sufficient to do the following:
 
  
-# Install blender 2.78
+##### Install blender 2.78
 ```
 wget https://download.blender.org/release/Blender2.79/blender-2.79a-linux-glibc219-x86_64.tar.bz2
 ```
 
-# Un-TAR Blender
+##### Un-TAR Blender
 ```
 tar xjf blender-2.79a-linux-glibc219-x86_64.tar.bz2
 ```
 
-# Export the BLENDER_PATH
+##### Export the BLENDER_PATH
 ```
 export BLENDER_PATH='/path/to/blender/blender-2.79a-linux-glibc219-x86_64'
 ```
 
-# Install pip
+##### Install pip
 ```
 wget https://bootstrap.pypa.io/get-pip.py
 $BLENDER_PATH/2.79/python/bin/python3.5m get-pip.py
 ```
 
-# Make sure you have libglu1
+##### Make sure you have libglu1
 ```
 sudo apt-get install libglu1
 ```
 
-# Install scipy
+##### Install scipy
 For this step, we want to install scipy. However, installing scipy installs a new version of numpy that causes a conflict. To fix this issue we need to uninstall the default version of numpy that comes with Blender.
 
 ##### Uninstall numpy
