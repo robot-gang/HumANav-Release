@@ -72,7 +72,7 @@ def init_scene(scene, params, gender='female'):
     # load fbx model
     bpy.ops.import_scene.fbx(filepath=join(params['smpl_data_folder'], 'basicModel_%s_lbs_10_207_0_v1.0.2.fbx' % gender[0]),
                              axis_forward='Y', axis_up='Z', global_scale=100)
-    obname = '%s_avg' % gender[0] 
+    obname = '%s_avg' % gender[0]
     ob = bpy.data.objects[obname]
     ob.data.use_auto_smooth = False  # autosmooth creates artifacts
 
@@ -228,9 +228,9 @@ def load_body_data(smpl_data, ob, obname, gender='female', idx=0):
     for seq in smpl_data.files:
         if seq.startswith('pose_'):
             cmu_keys.append(seq.replace('pose_', ''))
-    
+
     name = sorted(cmu_keys)[idx % len(cmu_keys)]
-    
+
     cmu_parms = {}
     for seq in smpl_data.files:
         if seq == ('pose_' + name):
@@ -258,7 +258,7 @@ def main():
     start_time = time.time()
 
     import argparse
-    
+
     # parse commandline arguments
     #log_message(sys.argv)
     parser = argparse.ArgumentParser(description='Generate synth dataset images.')
@@ -275,7 +275,7 @@ def main():
     parser.add_argument('--outdir', type=str, help='out directory')
 
     args = parser.parse_args(sys.argv[sys.argv.index("--") + 1:])
-   
+
     idx = args.idx
     ishape = args.ishape
     stride = args.stride
@@ -304,12 +304,12 @@ def main():
         assert body_shape_idx < 1682
     else:
         assert(gender in ['male', 'female'])
-    
+
     idx_info = load(open("pkl/idx_info.pickle", 'rb'))
 
     # get runpass
     (runpass, idx) = divmod(idx, len(idx_info))
-    
+
     log_message("runpass: %d" % runpass)
     log_message("output idx: %d" % idx)
     idx_info = idx_info[idx]
@@ -320,8 +320,8 @@ def main():
     # import configuration
     log_message("Importing configuration")
     import config
-    params = config.load_file('config', 'SYNTH_DATA')
-    
+    params = config.load_file('config_local', 'SYNTH_DATA')
+
     smpl_data_folder = params['smpl_data_folder']
     smpl_data_filename = params['smpl_data_filename']
     clothing_option = params['clothing_option'] # grey, nongrey or all
@@ -361,11 +361,11 @@ def main():
     log_message("GENERATED SEED %d from string '%s'" % (seed_number, s))
     random.seed(seed_number)
     np.random.seed(seed_number)
-    
+
     if(output_types['vblur']):
         vblur_factor = np.random.normal(0.5, 0.5)
         params['vblur_factor'] = vblur_factor
-    
+
     log_message("Setup Blender")
 
     genders = {0: 'female', 1: 'male'}
@@ -413,16 +413,16 @@ def main():
 
     log_message("Loading body data")
     cmu_parms, fshapes, name = load_body_data(smpl_data, ob, obname, idx=idx, gender=gender)
-    
+
     log_message("Loaded body data for %s" % name)
-    
+
     nb_fshapes = len(fshapes)
-    
+
     # Force the train split
     fshapes = fshapes[:int(nb_fshapes*0.8)]
-    
+
     shape = fshapes[body_shape_idx]
-    
+
     # example shapes
     #shape = np.zeros(10) #average
     #shape = np.array([ 2.25176191, -3.7883464 ,  0.46747496,  3.89178988,  2.20098416,  0.26102114, -3.07428093,  0.55708514, -3.94442258, -2.88552087]) #fat
@@ -436,10 +436,10 @@ def main():
     orig_trans = np.asarray(arm_ob.pose.bones[obname+'_Pelvis'].location).copy()
 
     data = cmu_parms[name]
-    
+
     fbegin = ishape*stepsize*stride
     fend = min(ishape*stepsize*stride + stepsize*clipsize, len(data['poses']))
-    
+
     log_message("Computing how many frames to allocate")
     N = len(data['poses'][fbegin:fend:stepsize])
     log_message("Allocating %d frames in mat file" % N)
@@ -450,7 +450,7 @@ def main():
     matfile_info = join(output_path, name.replace(" ", "") + "_c%04d_info.mat" % (ishape+1))
     log_message('Working on %s' % matfile_info)
 
-    
+
     # allocate
     dict_info = {}
     dict_info['bg'] = np.zeros((N,), dtype=np.object) # background image path
@@ -490,7 +490,7 @@ def main():
     curr_shape = reset_joint_positions(orig_trans, shape, ob, arm_ob, obname, scene,
                                        cam_ob, smpl_data['regression_verts'], smpl_data['joint_regressor'])
     random_zrot = 2*np.pi*np.random.rand()
-    
+
     arm_ob.animation_data_clear()
     cam_ob.animation_data_clear()
 
@@ -534,7 +534,7 @@ def main():
         scene.update()
 
         # Bodies centered only in each minibatch of clipsize frames
-        if seq_frame == 0 or reset_loc: 
+        if seq_frame == 0 or reset_loc:
             reset_loc = False
             new_pelvis_loc = arm_ob.matrix_world.copy() * arm_ob.pose.bones[obname+'_Pelvis'].head.copy()
             cam_ob.location = orig_cam_loc.copy() + (new_pelvis_loc.copy() - orig_pelvis_loc.copy())
@@ -579,7 +579,7 @@ def compute_velocity_folder(human_speed, vs, rebinned_vs, rebinned_velocity_fold
     abs_diff = np.abs(vs-human_speed)
     min_idx = np.argmin(abs_diff)
 
-    
+
     try:
         rebinned_min_idx = rebin_map[min_idx]
     except KeyError:
