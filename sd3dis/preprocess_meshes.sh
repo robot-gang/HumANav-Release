@@ -14,8 +14,11 @@
 # limitations under the License.
 # ==============================================================================
 
-### Note: Change area_names to process only a subset of the data
-area_names=("3" "5a")
+if [ $# -eq 0 ]; then
+  exit 1
+fi
+
+area_names=("$@")
 
 mkdir -p stanford_building_parser_dataset
 mkdir -p stanford_building_parser_dataset/mesh
@@ -23,19 +26,19 @@ cd stanford_building_parser_dataset_raw
 
 # Untar the files and extract the meshes.
 for t in "${area_names[@]}"; do
-	  tar -xf area_"$t"_no_xyz.tar area_$t/3d/rgb_textures
-	    mv area_$t/3d/rgb_textures ../stanford_building_parser_dataset/mesh/area$t
-	      rmdir area_$t/3d
-	        rmdir area_$t
-	done
+  tar -xf area_"$t"_no_xyz.tar area_$t/3d/rgb_textures
+  mv area_$t/3d/rgb_textures ../stanford_building_parser_dataset/mesh/area$t
+  rmdir area_$t/3d
+  rmdir area_$t
+done
 
-	cd ..
+cd ..
 
-	# Preprocess meshes to remove the group and chunk information.
-	cd stanford_building_parser_dataset/
-	for t in "${area_names[@]}"; do
-		  obj_name=`ls mesh/area$t/*.obj`
-		    cp $obj_name "$obj_name".bck
-		      cat $obj_name.bck | grep -v '^g' | grep -v '^o' > $obj_name
-	      done
-	      cd ..
+# Preprocess meshes to remove the group and chunk information.
+cd stanford_building_parser_dataset/
+for t in "${area_names[@]}"; do
+  obj_name=`ls mesh/area$t/*.obj`
+  cp $obj_name "$obj_name".bck
+  cat $obj_name.bck | grep -v '^g' | grep -v '^o' > $obj_name
+done
+cd ..
