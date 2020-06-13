@@ -12,7 +12,7 @@ male_test_filename = 'txt/male_test_textures.txt'
 base_outdir = 'human_textures'
 
 import config
-params = config.load_file('config', 'SYNTH_DATA')
+params = config.load_file('config_local', 'SYNTH_DATA')
 smpl_data_dir = params['smpl_data_folder']
 
 def mkdir_if_missing(dirname):
