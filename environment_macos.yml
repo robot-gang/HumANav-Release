@@ -1,10 +1,14 @@
-name: humanav
+name: humanav1
 channels:
   - defaults
 dependencies:
+<<<<<<< Updated upstream
   - _libgcc_mutex=0.1
   - ca-certificates=2019.10.16
   - libedit=3.1.20181209
+=======
+  - ca-certificates=2019.10.16
+>>>>>>> Stashed changes
   - libffi=3.2.1
   - ncurses=6.1
   - openssl=1.1.1d

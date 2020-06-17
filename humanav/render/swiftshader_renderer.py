@@ -529,13 +529,16 @@ class SwiftshaderRenderer():
     
     return num, vbo, tbo
 
-  def load_shapes(self, shapes, dedup_tbo=False, allow_repeat_humans=False):
+  def load_shapes(self, shapes, dedup_tbo=False, allow_repeat_humans=False, human_id = 0):
     entities = self.entities
     entity_ids = []
     dedup_dict = {}
     for i, shape in enumerate(shapes):
       for j in range(len(shape.meshes)):
         name = shape.meshes[j].name
+        if 'human' in name:
+          name = 'human{}'.format(human_id)
+
         if not (allow_repeat_humans and 'human' in name):
             assert name not in entities, '{:s} entity already exists.'.format(name)
         if shape.materials[j][0] in dedup_dict and dedup_tbo:
@@ -617,6 +620,19 @@ class SwiftshaderRenderer():
           glDeleteTextures(1, [tbo])
       else:
           assert (len(human_keys) == 0)
+
+  def remove_human_by_id(self, id=0):
+      """
+      Delete the mesh information for the loaded human (vertices, faces, textures)
+      """
+      #human_keys = list(filter(lambda x: 'human' in x, self.entities.keys()))
+      human_key = 'human'+str(id)
+      entity = self.entities.pop(human_key, None)
+      vbo = entity['vbo']
+      tbo = entity['tbo']
+      num = entity['num']
+      glDeleteBuffers(1, [vbo])
+      glDeleteTextures(1, [tbo])
 
   def __del__(self):
     self.clear_scene()

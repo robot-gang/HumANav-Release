@@ -121,13 +121,14 @@ def add_human_to_traversible(map, robot_base, robot_height, robot_radius,
 
   # Combine the occupancy information from the static map
   # and the human
-  traversible = np.stack([map._traversible, obstacle_free], axis=2)
+  traversible = np.stack([map.traversible, obstacle_free], axis=2)
   traversible = np.all(traversible, axis=2)
 
   map.traversible = traversible
   map._human_traversible = obstacle_free*1.
   map._human_radius = human_radius
   map.human_xy_footprint_coordinates_n2 = human_xy_footprint_coordinates_n2
+  
   return map
 
 def compute_traversibility(map, robot_base, robot_height, robot_radius,
@@ -241,7 +242,7 @@ def generate_goal_images(map_scales, map_crop_sizes, n_ori, goal_dist,
   goal_theta = goal_theta[:,0]
   rel_goal_orientation = rel_goal_orientation[:,0]
 
-  goals = [];
+  goals = []
   # Generate the map images.
   for i, (sc, map_crop_size) in enumerate(zip(map_scales, map_crop_sizes)):
     goal_i = np.zeros((goal_dist.shape[0], map_crop_size, map_crop_size, n_ori),

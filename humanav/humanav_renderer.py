@@ -19,11 +19,11 @@ class HumANavRenderer():
     def __init__(self, params):
         self.p = params
         self.human_texture = None
-
         if self.p.load_meshes:
             self.d = sbpd.get_dataset(self.p.dataset_name, 'all', data_dir=self.p.sbpd_data_dir, surreal_params=self.p.surreal)
             self.building = self.d.load_data(self.p.building_name, self.p.robot_params, self.p.flip)
             self.human_loaded = False
+            self.num_humans = 0
 
             # Instantiating a camera/ shader object is only needed
             # for rgb and depth images
@@ -55,6 +55,7 @@ class HumANavRenderer():
         r = cls.renderer
         if r is not None:
             dn, bn, f, c = r.p.dataset_name, r.p.building_name, r.p.flip, r.p.modalities
+        
             if dn == params.dataset_name and bn == params.building_name and f == params.flip and c == params.modalities:
                 return r
             else:
@@ -82,7 +83,7 @@ class HumANavRenderer():
             assert(False)
         return np.array(imgs)
 
-    def load_random_human_identity(self, identity_rng):
+    def load_random_human_identity(self, identity_rng, id=0):
         """
         Sample a new human identity, but don't load it into
         memory.
@@ -91,7 +92,8 @@ class HumANavRenderer():
                 self.d.get_random_human_gender_texture_and_body_shape(identity_rng, load_materials=False)
         identity = {'human_gender': human_gender,
                     'human_texture': human_texture,
-                    'body_shape': body_shape}
+                    'body_shape': body_shape,
+                    'human_id': id}
         return identity
 
     def add_human_with_known_identity_at_position_with_speed(self, pos_3, speed, mesh_rng, identity, allow_repeat_humans=False):
@@ -110,21 +112,21 @@ class HumANavRenderer():
         human_mesh_params = self.building.human_mesh_info
         return human_mesh_params
 
-    def add_human_at_position_with_speed(self, pos_3, speed, identity_rng, mesh_rng, only_sample_human_identity=False):
+    def add_human_at_position_with_speed(self, h, pos_3, only_sample_human_identity=False):
         """
         Inserts a human mesh at [x, y, theta]
         specified by pos_3.
         """
         if self.p.load_meshes:
             # Sample a human gender, texture, body_shape
-            self.human_gender, self.human_texture, self.body_shape = \
-                    self.d.get_random_human_gender_texture_and_body_shape(identity_rng)
+            h.human_gender, h.human_texture, h.body_shape = \
+                    self.d.get_random_human_gender_texture_and_body_shape(h.identity_rng)
 
             if not only_sample_human_identity:
                 # Load the human mesh into the scene
-                self.building.load_human_into_scene(self.d, pos_3, speed,
-                                                    self.human_gender, self.human_texture,
-                                                    self.body_shape, mesh_rng)
+                self.building.load_human_into_scene(self.d, pos_3, h.speed,
+                                                    h.human_gender, h.human_texture,
+                                                    h.body_shape, h.mesh_rng, human_id=h.id)
 
                 # Log that there is a human in the environment
                 self.human_loaded = True
@@ -148,6 +150,19 @@ class HumANavRenderer():
                 self.building.remove_human()
                 self.human_loaded = False
                 self.human_texture = None
+
+    def remove_human_by_id(self, id=0):
+        """
+        If a human mesh has been loaded into the SBPD
+        environment, remove it.
+        """
+        print('humanav')
+        if self.p.load_meshes:
+            if self.human_loaded:
+                self.building.remove_human_by_id(id)
+                self.human_loaded = False
+                self.human_texture = None
+
 
     def move_human_to_position_with_speed(self, pos_3, speed, mesh_rng):
         """

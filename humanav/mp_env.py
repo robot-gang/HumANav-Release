@@ -135,7 +135,7 @@ class Building():
   
   def load_human_into_scene(self, dataset, pos_3, speed, gender,
                             human_materials, body_shape, rng, dedup_tbo=False,
-                            allow_repeat_humans=False):
+                            allow_repeat_humans=True, human_id=0):
     """
     Load a 'gendered' human mesh with 'body shape' and texture, 'human_materials',
     into a building at 'pos_3' with 'speed' in the static building.
@@ -166,10 +166,10 @@ class Building():
     pos_3 = self._traversible_world_to_vertex_world(pos_3)
     shapess[0].meshes[0].vertices = self._transform_to_world(shapess[0].meshes[0].vertices, pos_3)
 
-    self.renderer_entitiy_ids += self.r_obj.load_shapes(shapess, dedup_tbo, allow_repeat_humans=allow_repeat_humans)
-
+    self.renderer_entitiy_ids += self.r_obj.load_shapes(shapess, dedup_tbo, allow_repeat_humans=allow_repeat_humans, human_id=human_id)
     # Update The Traversible
-    if dataset.surreal_params.compute_human_traversible:
+    update_traversible = True
+    if dataset.surreal_params.compute_human_traversible or update_traversible:
         map = self.map
         env = self.env
         robot= self.robot
@@ -194,7 +194,7 @@ class Building():
       human_entitiy_ids = list(filter(lambda x: 'human' in x, self.renderer_entitiy_ids))
 
       # Only one human supported currently
-      assert (len(human_entitiy_ids) <= 1)
+      #assert (len(human_entitiy_ids) <= 1)
 
       for human_entity_id in human_entitiy_ids:
           self.renderer_entitiy_ids.remove(human_entity_id)
@@ -202,6 +202,28 @@ class Building():
       # Update the traversible to be human free
       self.map.traversible = self.map._traversible
       self.traversible = self.map._traversible
+
+  def remove_human_by_id(self, id=0):
+      """
+      Remove a human that has been loaded into the SBPD environment
+      """
+      print('mp_env')
+      # Delete the human mesh from memory
+      self.r_obj.remove_human_by_id(id)
+
+      # Remove the human from the list of loaded entities
+      #human_entitiy_ids = list(filter(lambda x: 'human' in x, self.renderer_entitiy_ids))
+      human_entity_id = 'human' + str(id)
+      # Only one human supported currently
+      #assert (len(human_entitiy_ids) <= 1)
+      self.renderer_entitiy_ids.remove(human_entity_id)
+      print('removed_model')
+      # Update the traversible to be human free
+
+      # need to fix this lol but not the end of the world
+      self.map.traversible = self.map._traversible
+      self.traversible = self.map._traversible   
+  
 
   def move_human_to_position_with_speed(self, dataset, pos_3, speed, gender,
                                         human_materials, body_shape, rng):
