@@ -26,7 +26,7 @@ def create_params():
     # of height, 'height', with radius, 'radius',
     # base at height 'base' above the ground
     # The robot has a camera at height
-    # 'sensor_height' pointing at 
+    # 'sensor_height' pointing at
     # camera_elevation_degree degrees vertically
     # from the horizontal plane.
     p.robot_params = DotMap(radius=18,
@@ -55,7 +55,9 @@ def create_params():
     return p
 
 def get_path_to_humanav():
-    return '/home/shawnshact/ucb/ee106b/HumANav-Release'
+    import config
+    params = config.load_file('config_local', 'SYNTH_DATA')
+    return params['path_to_humanav']
 
 def get_traversible_dir():
     return os.path.join(get_path_to_humanav(), 'sd3dis/stanford_building_parser_dataset/traversibles')
