@@ -1,6 +1,35 @@
 from dotmap import DotMap
 import numpy as np
 import os
+import ast
+import configparser
+import pdb
+import numpy as np
+import random
+
+def load_file(filename='config_local', section='SYNTH_DATA'):
+	# returns dictionary with all params
+
+	# Import configuration
+	config = configparser.ConfigParser()
+	res = config.read(filename)
+	if len(res) == 0:
+		print("ERROR: couldn't load 'config_local' file. To fix, copy 'config' to 'config_local' and modify the configurations (do not commit 'config_local' file)")
+		exit(1)
+
+	params = {}
+	options = config.options(section)
+	for option in options:
+		try:
+			params[option] = ast.literal_eval(config.get(section, option))
+			if params[option] == -1:
+				print("skip: %s" % option)
+		except:
+			print(" CONFIG PARSING EXCEPTION on %s" % option)
+			params[option] = None
+			raise
+
+	return params
 
 
 def create_params():
@@ -55,8 +84,7 @@ def create_params():
     return p
 
 def get_path_to_humanav():
-    import config
-    params = config.load_file('config_local', 'SYNTH_DATA')
+    params = load_file('config_local', 'SYNTH_DATA')
     return params['path_to_humanav']
 
 def get_traversible_dir():
