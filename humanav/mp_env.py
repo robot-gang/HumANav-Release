@@ -2,6 +2,7 @@ from __future__ import print_function
 import logging
 import numpy as np
 import sys
+import matplotlib.pyplot as plt
 if sys.version_info[0] == 2:
     from . import map_utils as mu
 else:
@@ -11,6 +12,7 @@ make_map = mu.make_map
 resize_maps = mu.resize_maps
 compute_traversibility = mu.compute_traversibility
 add_human_to_traversible = mu.add_human_to_traversible
+remove_human_from_traversible = mu.remove_human_from_traversible
 pick_largest_cc = mu.pick_largest_cc
 
 class Building():
@@ -45,6 +47,7 @@ class Building():
     self.env_paths = env_paths 
     self.shapess = shapess
     self.map = map
+    
 
     # The map object has _traversible (only the SBPD building)
     # and traversible (the current traversible which may include
@@ -58,7 +61,8 @@ class Building():
       self.traversible = pick_largest_cc(self.traversible)
       self.map._traversible = self.traversible
       self.map.traversible = self.traversible
-
+    
+    self.map.occupancy_traversible = np.invert(self.map.traversible)*1
     # Instance variable for storing human information
     self.human_mesh_info = None
     self.human_pos_3 = None
@@ -133,14 +137,20 @@ class Building():
       pos_3 = np.array([xy_offset_map[0], xy_offset_map[1], pos_3[2]])
       return pos_3
   
-  def load_human_into_scene(self, dataset, pos_3, speed, gender,
-                            human_materials, body_shape, rng, dedup_tbo=False,
-                            allow_repeat_humans=True, human_id=0):
+  def load_human_into_scene(self, dataset, pos_3, human, dedup_tbo=False,
+                            allow_repeat_humans=True):
     """
     Load a 'gendered' human mesh with 'body shape' and texture, 'human_materials',
     into a building at 'pos_3' with 'speed' in the static building.
     """
     self.human_pos_3 = pos_3*1.
+
+    speed = human.speed
+    gender = human.human_gender
+    human_materials = human.human_texture
+    body_shape = human.body_shape
+    rng = human.mesh_rng
+    human_id = human.id
 
     # Load the human mesh
     shapess, center_pos_3, human_mesh_info = \
@@ -175,7 +185,7 @@ class Building():
         robot= self.robot
         map = add_human_to_traversible(
           map, robot.base, robot.height, robot.radius, env.valid_min,
-          env.valid_max, env.num_point_threshold, shapess=shapess, sc=100.,
+          env.valid_max, env.num_point_threshold, human, shapess=shapess, sc=100.,
             n_samples_per_face=env.n_samples_per_face, human_xy_center_2=pos_3[:2])
 
         self.traversible = map.traversible
@@ -203,11 +213,12 @@ class Building():
       self.map.traversible = self.map._traversible
       self.traversible = self.map._traversible
 
-  def remove_human_by_id(self, id=0):
+  def remove_human_object(self, human):
       """
       Remove a human that has been loaded into the SBPD environment
       """
       print('mp_env')
+      id = human.id
       # Delete the human mesh from memory
       self.r_obj.remove_human_by_id(id)
 
@@ -217,26 +228,29 @@ class Building():
       # Only one human supported currently
       #assert (len(human_entitiy_ids) <= 1)
       self.renderer_entitiy_ids.remove(human_entity_id)
-      print('removed_model')
+      print('removed model')
       # Update the traversible to be human free
-
+      map = self.map
+      self.map = remove_human_from_traversible(map, human)
+      self.traversible = self.map.traversible
+      plt.show()
+      print('removed from map')
       # need to fix this lol but not the end of the world
-      self.map.traversible = self.map._traversible
-      self.traversible = self.map._traversible   
+      #self.map.traversible = self.map._traversible
+      #self.traversible = self.map._traversible   
   
 
-  def move_human_to_position_with_speed(self, dataset, pos_3, speed, gender,
-                                        human_materials, body_shape, rng):
+  def move_human_to_position_with_speed(self, dataset, pos_3, human):
       """
       Removes the previously loaded human mesh,
       and loads a new one with the same gender, texture
       and body shape at pos_3 with speed_3.
       """
       # Remove the previous human
-      self.remove_human()
+      self.remove_human_object(human)
 
       # Load a new human with the same speed, gender, texture, body shape
-      self.load_human_into_scene(dataset, pos_3, speed, gender, human_materials, body_shape, rng)
+      self.load_human_into_scene(dataset, pos_3, human)
  
   def to_actual_xyt(self, pqr):
     """Converts from node array to location array on the map."""

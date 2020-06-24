@@ -21,6 +21,7 @@ import numpy as np, scipy.ndimage
 import PIL
 import cv2
 import sys
+import matplotlib.pyplot as plt
 if sys.version_info[0] == 2:
     from . import utils
 else:
@@ -74,8 +75,16 @@ def _fill_holes(img, thresh):
   img_[l == -1] = True
   return img_
 
+
+def remove_human_from_traversible(map, human):
+  map.occupancy_traversible -= human.obstacle_shape
+  map.traversible = (map.occupancy_traversible < 1)
+  return map
+
+
+
 def add_human_to_traversible(map, robot_base, robot_height, robot_radius,
-  valid_min, valid_max, num_point_threshold, shapess, sc=100.,
+  valid_min, valid_max, num_point_threshold, human, shapess, sc=100.,
   n_samples_per_face=200, human_xy_center_2=None):
   
   """
@@ -120,11 +129,12 @@ def add_human_to_traversible(map, robot_base, robot_height, robot_radius,
       _fill_holes(num_obstcale_points > num_point_threshold, 20), selem) != True
 
   # Combine the occupancy information from the static map
-  # and the human
-  traversible = np.stack([map.traversible, obstacle_free], axis=2)
-  traversible = np.all(traversible, axis=2)
 
-  map.traversible = traversible
+  human.obstacle_shape = np.invert(obstacle_free)*1
+
+  map.occupancy_traversible += human.obstacle_shape
+
+  map.traversible = map.occupancy_traversible < 1
   map._human_traversible = obstacle_free*1.
   map._human_radius = human_radius
   map.human_xy_footprint_coordinates_n2 = human_xy_footprint_coordinates_n2

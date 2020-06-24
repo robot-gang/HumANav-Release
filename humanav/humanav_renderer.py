@@ -21,9 +21,11 @@ class HumANavRenderer():
         self.human_texture = None
         if self.p.load_meshes:
             self.d = sbpd.get_dataset(self.p.dataset_name, 'all', data_dir=self.p.sbpd_data_dir, surreal_params=self.p.surreal)
+            
             self.building = self.d.load_data(self.p.building_name, self.p.robot_params, self.p.flip)
-            self.human_loaded = False
-            self.num_humans = 0
+            
+            # Dictionary for storing info on the humans we have currently loaded in the scene
+            self.humans = []
 
             # Instantiating a camera/ shader object is only needed
             # for rgb and depth images
@@ -45,6 +47,7 @@ class HumANavRenderer():
         else:
             self.human_radius = self.default_human_radius
             self.human_mesh_params = None
+        
 
     @classmethod
     def get_renderer(cls, params):
@@ -124,12 +127,10 @@ class HumANavRenderer():
 
             if not only_sample_human_identity:
                 # Load the human mesh into the scene
-                self.building.load_human_into_scene(self.d, pos_3, h.speed,
-                                                    h.human_gender, h.human_texture,
-                                                    h.body_shape, h.mesh_rng, human_id=h.id)
+                self.building.load_human_into_scene(self.d, pos_3, h)
 
                 # Log that there is a human in the environment
-                self.human_loaded = True
+                self.humans.append(h.id)
                 self.human_traversible = self.building.map._human_traversible
                 
                 # If updating the human traversible a radius will be dynamically
@@ -140,38 +141,24 @@ class HumANavRenderer():
                     self.human_radius = self.default_human_radius
                 self.human_mesh_params = self.building.human_mesh_info
 
-    def remove_human(self):
+    def remove_human(self, human):
         """
         If a human mesh has been loaded into the SBPD
         environment, remove it.
         """
         if self.p.load_meshes:
-            if self.human_loaded:
-                self.building.remove_human()
-                self.human_loaded = False
-                self.human_texture = None
-
-    def remove_human_by_id(self, id=0):
-        """
-        If a human mesh has been loaded into the SBPD
-        environment, remove it.
-        """
-        print('humanav')
-        if self.p.load_meshes:
-            if self.human_loaded:
-                self.building.remove_human_by_id(id)
-                self.human_loaded = False
-                self.human_texture = None
+            if human.id in self.humans:
+                self.humans.remove(human.id)
+                self.building.remove_human_object(human)
 
 
-    def move_human_to_position_with_speed(self, pos_3, speed, mesh_rng):
+    def move_human_to_position_with_speed(self, human, pos_3):
         """
         Moves an existing human mesh to the pos_3 (
         [x, y, theta]) in the mesh.
         """
         if self.p.load_meshes:
-            self.building.move_human_to_position_with_speed(self.d, pos_3, speed, self.human_gender,
-                                                            self.human_texture, self.body_shape, mesh_rng)
+            self.building.move_human_to_position_with_speed(self.d, pos_3, human)
             self.human_traversible = self.building.map._human_traversible
 
     def _get_rgb_image(self, starts_n2, thetas_n1, human_visible):
